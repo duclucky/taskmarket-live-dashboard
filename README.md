@@ -52,10 +52,15 @@ and writes `data.json`; the page reads only that file.
 
 ## Refresh
 
-GitHub Actions (`.github/workflows/refresh.yml`) runs
-`node scripts/fetch.mjs` every hour and commits `data.json` when it
-changes. GitHub Pages serves the static files. The page shows the
-`fetchedAt` time from `data.json` as its data-as-of time.
+GitHub Actions runs `node scripts/fetch.mjs` every hour and commits
+`data.json` when it changes. The workflow file is `refresh-workflow.yml`
+in this repo: place it at `.github/workflows/refresh.yml` (the GitHub
+web UI, Actions tab, "set up a workflow yourself", paste the file, commit).
+API tokens without the `workflow` scope cannot create files under
+`.github/workflows/`, which is why it ships as a separate file. Once it
+is in place, GitHub Pages serves the static files and the data refreshes
+hourly with no further action. The page shows the `fetchedAt` time from
+`data.json` as its data-as-of time.
 
 Money: `rewardVolume` and `paidVolume` are raw stablecoin units with
 6 decimals. Flow totals divide by 1,000,000. Time series buckets in
