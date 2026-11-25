@@ -1,0 +1,1 @@
+{"description":"A public, static dashboard of Taskmarket market data, fetched on the server from the public Taskmarket API.","engines":{"node":">=18"},"license":"MIT","name":"taskmarket-live-dashboard","scripts":{"deploy":"bash deploy.sh","refresh":"node scripts/fetch.mjs","serve":"python3 -m http.server 8000"},"type":"module","version":"1.0.0"}
