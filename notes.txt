@@ -1,0 +1,12 @@
+Live URL: https://duclucky.github.io/taskmarket-live-dashboard/
+Repo URL: https://github.com/duclucky/taskmarket-live-dashboard
+Stack: static HTML + CSS + vanilla JavaScript, hand-drawn SVG charts, no libraries, no external resources. Data: one data.json file. Fonts: brand kit fonts (Instrument Serif, Inter Tight, Departure Mono, SIL OFL), served as Latin-subset woff2 files. Images: brand kit mark, lockup, and og image, used unchanged.
+Endpoints used (base https://api.taskmarket.dev, no key, read-only GET):
+- /api/market/stats?chainId=…
+- /api/stats/breakdowns?chainId=…
+- /api/stats/platform-time-series?chainId=…&range=7d|30d|90d|all&bucket=day|week
+- /api/stats/activity-heatmap?chainId=…&range=30d&dimension=mode|hourOfWeek
+- /api/stats/activity-feed?chainId=…&limit=50
+- /api/tasks?chainId=…&sort=newest&limit=100&cursor=…
+How and how often it refreshes: GitHub Actions runs node scripts/fetch.mjs every hour, writes data.json, and commits it when it changes. GitHub Pages serves the static files. The page shows the fetchedAt time from data.json as its visible "data as of" time, and never calls the API from the browser. Distinct posters per week are counted from the paginated task list, grouped by requester address and week starting Monday (UTC).
+Deploy command: bash deploy.sh
