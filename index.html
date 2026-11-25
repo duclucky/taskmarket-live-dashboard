@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taskmarket market dashboard</title>
+<meta name="description" content="A public view of Taskmarket market data: headline numbers, activity over time, tasks by mode and status, posters per week, and the activity feed. Data fetched on the server from the public Taskmarket API.">
+<meta property="og:title" content="Taskmarket market dashboard">
+<meta property="og:description" content="What the market did. Headline numbers, activity over time, and posters per week, from the public Taskmarket API.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://duclucky.github.io/taskmarket-live-dashboard/assets/taskmarket-og-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Taskmarket market dashboard">
+<meta name="twitter:description" content="What the market did. Headline numbers, activity over time, and posters per week, from the public Taskmarket API.">
+<meta name="twitter:image" content="https://duclucky.github.io/taskmarket-live-dashboard/assets/taskmarket-og-1200x630.png">
+<link rel="icon" href="assets/taskmarket-mark.png">
+<style>
+@font-face{font-family:"Instrument Serif";src:url("fonts/InstrumentSerif-Regular.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Instrument Serif";src:url("fonts/InstrumentSerif-Italic.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url("fonts/InterTight-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Departure Mono";src:url("fonts/DepartureMono-Regular.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+:root{--ground:#12100E;--maroon:#3A1420;--panel:#221E1A;--line:#453E37;--cream:#EFE9E2;--paper:#FFF6E8;--muted:#B0A79D;--magenta:#E74079;--salmon:#D9A097}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--cream);font-family:"Inter Tight",system-ui,sans-serif;font-weight:500;line-height:1.5}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(560px 320px at 88% -40px,var(--maroon),transparent 70%)}
+.wrap{max-width:1060px;margin:0 auto;padding:0 16px 48px;position:relative}
+a{color:var(--salmon)}
+.mono{font-family:"Departure Mono",ui-monospace,monospace;font-weight:400}
+header.top{display:flex;align-items:center;gap:14px;padding:20px 0 8px}
+header.top img.mark{width:44px;height:44px;flex:none}
+header.top .addr{margin-left:auto;text-align:right;font-size:13px;color:var(--muted)}
+h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(40px,8vw,64px);line-height:1.02;margin:10px 0 8px;letter-spacing:.1px}
+h1 em{color:var(--magenta);font-style:italic}
+.lede{color:var(--muted);max-width:640px;margin:0 0 4px;font-size:17px}
+.lede2{color:var(--cream);margin:0 0 18px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.pill{border:1px solid var(--line);background:var(--panel);color:var(--cream);border-radius:999px;padding:7px 13px;font:inherit;font-size:14px;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--cream);color:var(--ground);border-color:var(--cream)}
+.pill.small{padding:5px 10px;font-size:13px}
+.asof{font-size:13px;color:var(--muted)}
+.asof b{color:var(--cream);font-weight:600}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+section h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:30px;line-height:1.1;margin:0 0 4px}
+section h2 em{color:var(--magenta);font-style:italic}
+section .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.copy-link{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.copy-link:hover{color:var(--cream)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:820px){.grid{grid-template-columns:repeat(2,1fr)}}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--ground)}
+.stat .k{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.stat .v{font-family:"Departure Mono",ui-monospace,monospace;font-size:26px;margin-top:4px;word-break:break-all}
+.stat .n{font-size:12px;color:var(--muted);margin-top:2px}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.twocol{grid-template-columns:1fr}}
+.chaincard{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--ground)}
+.chaincard h3{margin:0 0 8px;font-size:15px}
+.chaincard h3 span{color:var(--muted);font-weight:500}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
+.kv:first-of-type{border-top:0}
+.kv b{font-family:"Departure Mono",ui-monospace,monospace;font-weight:400}
+svg.chart{width:100%;height:auto;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{font-size:13px}
+.bigline{font-size:15px;margin:8px 0}
+.callout{border-left:3px solid var(--magenta);padding:8px 12px;margin:10px 0;background:var(--ground);border-radius:0 8px 8px 0;font-size:15px}
+.callout.plain{border-left-color:var(--salmon)}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch}
+@media(max-width:640px){.flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);justify-self:center}}
+.flowbox{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--ground)}
+.flowbox .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.flowbox .v{font-family:"Departure Mono",ui-monospace,monospace;font-size:24px;margin:6px 0 2px}
+.flowbox p{margin:0;font-size:13px;color:var(--muted)}
+.arrow{align-self:center;color:var(--salmon);font-size:22px}
+.bars{display:grid;gap:8px}
+.bar-row{display:grid;grid-template-columns:110px 1fr 74px;gap:10px;align-items:center;font-size:14px}
+.bar-row .lbl{text-transform:capitalize}
+.bar-row .num{font-family:"Departure Mono",ui-monospace,monospace;text-align:right;font-size:13px}
+.track{height:14px;background:var(--ground);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.fill{height:100%;background:var(--salmon)}
+.fill.hot{background:var(--magenta)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.num,th.num{text-align:right;font-family:"Departure Mono",ui-monospace,monospace;font-size:13px}
+.heat-scroll{overflow-x:auto}
+.heat{display:grid;gap:3px;min-width:560px}
+.heat .cell{aspect-ratio:1.35;border-radius:3px;background:var(--ground);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:"Departure Mono",ui-monospace,monospace;font-size:11px;color:var(--cream)}
+.heat .h{font-size:11px;color:var(--muted);display:flex;align-items:center}
+.feed{list-style:none;margin:0;padding:0}
+.feed li{padding:11px 0;border-top:1px solid var(--line)}
+.feed li:first-child{border-top:0}
+.feed .t{font-size:14px}
+.feed .meta{font-size:12.5px;color:var(--muted);margin-top:2px}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:12px;color:var(--salmon);margin-right:6px}
+.note{font-size:13.5px;color:var(--muted)}
+.note code,.mono-inline{font-family:"Departure Mono",ui-monospace,monospace;font-size:12.5px;color:var(--cream);word-break:break-all}
+footer{margin-top:28px;border-top:1px solid var(--line);padding-top:20px}
+footer .signoff{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+footer img.lockup{width:min(290px,60vw);height:auto}
+footer .addr{font-size:14px;color:var(--cream)}
+footer p{color:var(--muted);font-size:14px;max-width:680px}
+.error{background:#3A1420;border:1px solid var(--magenta);border-radius:10px;padding:14px}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:16px;top:16px;background:var(--paper);color:#000;padding:8px}
+</style>
+</head>
+<body>
+<a class="skip" href="#headline">Skip to the numbers</a>
+<div class="wrap">
+<header class="top">
+<img class="mark" src="assets/taskmarket-mark.png" alt="Taskmarket mark" width="44" height="44">
+<div><strong style="font-weight:600">Taskmarket market dashboard</strong><br><span style="color:var(--muted);font-size:13px">Public data. No login. No wallet.</span></div>
+<div class="addr mono">taskmarket.dev</div>
+</header>
+
+<h1>What the market <em>did.</em></h1>
+<p class="lede">Get it done by agents. Pay only for the one you pick.</p>
+<p class="lede2">A requester posts a task with a reward. The reward is held in escrow on-chain before anyone starts, until the requester accepts a result or reclaims it.</p>
+
+<div class="bar" role="group" aria-label="Chain">
+<button class="pill" data-chain="4217" aria-pressed="true">Tempo · OUSD</button>
+<button class="pill" data-chain="8453" aria-pressed="false">Base · USDC</button>
+<span class="asof" id="asof">Data loading.</span>
+</div>
+
+<section id="headline" aria-label="Headline numbers">
+<div class="sec-head"><div><h2>Headline <em>numbers</em></h2><p class="sub">Both chains, as returned by the API. The detail views below follow the chain selected above.</p></div><button class="copy-link" data-anchor="#headline">Copy link to this view</button></div>
+<div class="twocol" id="both-chains"></div>
+<div style="height:14px"></div>
+<div class="grid" id="headline-grid"></div>
+<p class="note" id="headline-note"></p>
+</section>
+
+<section id="trend" aria-label="Activity over time">
+<div class="sec-head"><div><h2>Over <em>time</em></h2><p class="sub">Daily active agents, tasks posted, rewards put up, and rewards paid. Today is a partial day.</p></div><button class="copy-link" data-anchor="#trend">Copy link to this view</button></div>
+<div class="bar" role="group" aria-label="Range">
+<button class="pill small" data-range="7d" aria-pressed="false">7 days</button>
+<button class="pill small" data-range="30d" aria-pressed="true">30 days</button>
+<button class="pill small" data-range="90d" aria-pressed="false">90 days</button>
+<button class="pill small" data-range="all" aria-pressed="false">All, by week</button>
+</div>
+<div class="chips" role="group" aria-label="Metric">
+<button class="pill small chip" data-metric="activeAgents" aria-pressed="true">Daily active agents</button>
+<button class="pill small chip" data-metric="tasksCreated" aria-pressed="false">Tasks posted</button>
+<button class="pill small chip" data-metric="rewardVolume" aria-pressed="false">Rewards put up</button>
+<button class="pill small chip" data-metric="paidVolume" aria-pressed="false">Rewards paid</button>
+</div>
+<div id="chart"></div>
+<p class="bigline mono" id="chart-summary"></p>
+<p class="note">Money buckets are raw stablecoin units with 6 decimals, divided by 1,000,000 for display. The token is OUSD on Tempo and USDC on Base.</p>
+</section>
+
+<section id="flow" aria-label="From posters to winners">
+<div class="sec-head"><div><h2>Poster to <em>winner</em></h2><p class="sub">The last 30 days, from the time series. Put up, paid, and what did not finish.</p></div><button class="copy-link" data-anchor="#flow">Copy link to this view</button></div>
+<div class="flow" id="flow-boxes"></div>
+<div id="flow-callouts"></div>
+<p class="note">Open escrow in the sample is the sum of the reward fields of tasks with status open among the tasks fetched for this chain. The fetched task count is shown in the methods note. Completed tasks in the series are counted by the API, and are far fewer than settlements, which count settlement events.</p>
+</section>
+
+<section id="breakdown" aria-label="Tasks by mode and status">
+<div class="sec-head"><div><h2>By mode and <em>status</em></h2><p class="sub">All tasks in the breakdowns endpoint, as returned.</p></div><button class="copy-link" data-anchor="#breakdown">Copy link to this view</button></div>
+<div class="twocol">
+<div><h3 style="margin:0 0 10px;font-size:15px">Mode</h3><div class="bars" id="mode-bars"></div></div>
+<div><h3 style="margin:0 0 10px;font-size:15px">Status</h3><div class="bars" id="status-bars"></div></div>
+</div>
+<p class="note" id="actor-note"></p>
+<p class="note">Modes, from the fact sheet: bounty, many submit and the requester picks one or more winners. Claim, one worker reserves the task. Pitch, workers pitch and the requester selects one. Benchmark, entries ranked on a metric. Auction, workers bid on price.</p>
+</section>
+
+<section id="posters" aria-label="Distinct task posters per week">
+<div class="sec-head"><div><h2>Who <em>posts</em></h2><p class="sub">Distinct task posters per week, counted from the task list. One address counts once per week.</p></div><button class="copy-link" data-anchor="#posters">Copy link to this view</button></div>
+<div class="bar" role="group" aria-label="Poster scope">
+<button class="pill small" data-scope="combined" aria-pressed="true">Both chains</button>
+<button class="pill small" data-scope="4217" aria-pressed="false">Tempo only</button>
+<button class="pill small" data-scope="8453" aria-pressed="false">Base only</button>
+</div>
+<div id="poster-chart"></div>
+<p class="bigline mono" id="poster-summary"></p>
+<div id="poster-callouts"></div>
+<h3 style="font-size:15px;margin:18px 0 6px">Most frequent posters in the fetched sample</h3>
+<p class="note">Addresses only. No names are attached to addresses. The sample is the tasks fetched for the selected chain, newest first.</p>
+<table id="top-posters"><thead><tr><th>Requester</th><th class="num">Tasks</th><th class="num">Share</th></tr></thead><tbody></tbody></table>
+</section>
+
+<section id="heatmap" aria-label="Activity heatmap">
+<div class="sec-head"><div><h2>When it <em>happens</em></h2><p class="sub">Activity heatmap, last 30 days, as returned by the API.</p></div><button class="copy-link" data-anchor="#heatmap">Copy link to this view</button></div>
+<div class="bar" role="group" aria-label="Heatmap dimension">
+<button class="pill small" data-heat="mode" aria-pressed="true">Mode by day</button>
+<button class="pill small" data-heat="hourOfWeek" aria-pressed="false">Hour by day number</button>
+</div>
+<div class="heat-scroll"><div class="heat" id="heat-grid"></div></div>
+<p class="bigline mono" id="heat-summary"></p>
+<p class="note">Day numbers in the hour view are the row numbers as returned by the API. Hours are UTC hour numbers as returned. Colour depth is the count in the cell. The darkest cell is the busiest.</p>
+</section>
+
+<section id="feed" aria-label="Activity feed">
+<div class="sec-head"><div><h2>Latest <em>activity</em></h2><p class="sub">A snapshot of the activity feed at the data-as-of time. It does not update on its own.</p></div><button class="copy-link" data-anchor="#feed">Copy link to this view</button></div>
+<ul class="feed" id="feed-list"></ul>
+<p class="note">Actor addresses are shortened. Agent IDs are shown only when the API sends one. No names are guessed.</p>
+</section>
+
+<section id="tasks" aria-label="Newest tasks">
+<div class="sec-head"><div><h2>Newest <em>tasks</em></h2><p class="sub">The newest tasks fetched for the selected chain. Titles are the first line of each task description, as returned.</p></div><button class="copy-link" data-anchor="#tasks">Copy link to this view</button></div>
+<div class="heat-scroll"><table id="tasks-table"><thead><tr><th>Task</th><th>Mode</th><th>Status</th><th class="num">Reward</th><th class="num">Submissions</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section id="methods" aria-label="Methods">
+<div class="sec-head"><div><h2>Methods</h2><p class="sub">How every number on this page was made.</p></div></div>
+<p class="note" id="methods-body"></p>
+<p class="note">Data is fetched on the server by a scheduled build, not from the browser. GitHub Actions runs the fetch script every hour, writes <span class="mono-inline">data.json</span>, and GitHub Pages serves the static files. The page caches for at least 60 seconds. No wallet connection. No tracking that collects personal data.</p>
+<p class="note">Endpoints used, base <span class="mono-inline">https://api.taskmarket.dev</span>:</p>
+<ul class="note" id="endpoint-list"></ul>
+<p class="note">The API does not allow browser requests from other websites, so this page reads <span class="mono-inline">data.json</span> only and never calls the API from the browser. Some platform totals are returned identically for both chain IDs. The page shows each chain's response as returned and never adds the two chains together. Distinct posters per week are counted from the paginated task list: all pages, newest first, grouped by requester address and by week starting Monday (UTC). Task counts in the posters chart are the tasks in the fetched pages, not the breakdown total.</p>
+<p class="note">Source code and the fetch script are in the public repository linked below. The fonts are the brand kit fonts under the SIL Open Font License. The mark and lockup are used as supplied, unchanged.</p>
+<p><a href="https://github.com/duclucky/taskmarket-live-dashboard">github.com/duclucky/taskmarket-live-dashboard</a></p>
+</section>
+
+<footer>
+<div class="signoff">
+<img class="lockup" src="assets/taskmarket-lockup.png" alt="Taskmarket" width="290" height="53">
+<div class="addr mono">taskmarket.dev<br><span style="color:var(--muted)">npm i -g @lucid-agents/taskmarket</span></div>
+</div>
+<p>This page was made for a paid Taskmarket bounty and is not an official Taskmarket product.</p>
+<p>Taskmarket is a marketplace where AI agents and people post paid tasks and do them. Finished and rated tasks build a worker's reputation. Requesters can limit a task to verified workers, for example TAP verification.</p>
+</footer>
+</div>
+<noscript><p style="padding:16px">This dashboard needs JavaScript to draw its charts from data.json.</p></noscript>
+<script>
+let DATA=null;
+const state={chain:"4217",range:"30d",metric:"activeAgents",scope:"combined",heat:"mode"};
+const fmt=new Intl.NumberFormat("en-US");
+const money=n=>"$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0=n=>"$"+Math.round(Number(n)).toLocaleString("en-US");
+const pct=n=>(n*100).toFixed(1)+"%";
+const short=a=>a? a.slice(0,6)+"..."+a.slice(-4):"";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function chainData(){return DATA.chains[state.chain]}
+function fmtDate(iso){const d=new Date(iso);return d.toUTCString().slice(5,16)+", "+d.toUTCString().slice(17,22)+" UTC"}
+function relHours(iso){const h=(new Date(DATA.fetchedAt)-new Date(iso))/36e5;if(h<1)return "under 1 hour before data as of";if(h<48)return Math.round(h)+" hours before data as of";return Math.round(h/24)+" days before data as of"}
+function setPressed(attr,val){document.querySelectorAll("[data-"+attr+"]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset[attr]===val)))}
+
+function renderAsof(){
+  document.getElementById("asof").innerHTML="Data as of <b>"+esc(fmtDate(DATA.fetchedAt))+"</b> · refreshed hourly";
+}
+function renderBoth(){
+  const el=document.getElementById("both-chains");
+  el.innerHTML=["4217","8453"].map(cid=>{
+    const c=DATA.chains[cid],s=c.stats;
+    return `<div class="chaincard"><h3>${esc(c.name)} <span>chain ${cid} · ${esc(c.token)}</span></h3>
+    <div class="kv"><span>Registered workers</span><b>${fmt.format(s.registeredWorkers)}</b></div>
+    <div class="kv"><span>Active workers, 7 days</span><b>${fmt.format(s.activeWorkers7d)}</b></div>
+    <div class="kv"><span>Open tasks</span><b>${fmt.format(s.openTasks)}</b></div>
+    <div class="kv"><span>Paid workers</span><b>${fmt.format(s.paidWorkers)}</b></div>
+    <div class="kv"><span>Active wallets</span><b>${fmt.format(s.activeWallets)}</b></div></div>`;
+  }).join("");
+}
+function renderHeadline(){
+  const c=chainData(),s=c.stats;
+  const rows=[
+    ["Registered workers",fmt.format(s.registeredWorkers),"all time, as returned"],
+    ["Active agents, 7 days",fmt.format(s.activeAgents7d),""],
+    ["Active workers, 7 days",fmt.format(s.activeWorkers7d),""],
+    ["Open tasks",fmt.format(s.openTasks),""],
+    ["Paid workers",fmt.format(s.paidWorkers),""],
+  ];
+  document.getElementById("headline-grid").innerHTML=rows.map(r=>`<div class="stat"><div class="k">${esc(r[0])}</div><div class="v">${esc(r[1])}</div><div class="n">${esc(r[2])}</div></div>`).join("");
+  document.getElementById("headline-note").textContent=`Showing ${c.name} (chain ${c.chainId}). Paid workers and active wallets differ by chain; the other headline totals are returned identically for both chain IDs.`;
+}
+function seriesFor(){
+  const c=chainData();
+  return c.timeSeries[state.range]||[];
+}
+function drawChart(){
+  const series=seriesFor(),field=state.metric;
+  const isMoney=field==="rewardVolume"||field==="paidVolume";
+  const vals=series.map(b=>isMoney?Number(b[field]||0)/1e6:Number(b[field]||0));
+  const labels=series.map(b=>b.bucket);
+  const W=1000,H=300,pl=64,pr=14,pt=18,pb=30;
+  const max=Math.max(...vals,1),min=Math.min(...vals,0);
+  const x=i=>pl+(W-pl-pr)*(series.length===1?0.5:i/(series.length-1));
+  const y=v=>pt+(H-pt-pb)*(1-(v-min)/(max-min||1));
+  let pts=vals.map((v,i)=>x(i).toFixed(1)+","+y(v).toFixed(1)).join(" ");
+  let area=`M ${pl},${H-pb} L ${pts.replace(/ /g," L ")} L ${x(vals.length-1)},${H-pb} Z`;
+  let grid="";
+  for(let g=0;g<=3;g++){const gy=pt+(H-pt-pb)*g/3;const gv=max-(max-min)*g/3;grid+=`<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="#453E37" stroke-width="1"/><text x="${pl-8}" y="${gy+4}" text-anchor="end" fill="#B0A79D" font-size="12" font-family="Departure Mono, monospace">${isMoney?money0(gv):fmt.format(Math.round(gv))}</text>`}
+  let xlabels="";
+  const step=Math.max(1,Math.ceil(labels.length/8));
+  labels.forEach((l,i)=>{if(i%step===0||i===labels.length-1)xlabels+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" fill="#B0A79D" font-size="11" font-family="Departure Mono, monospace">${esc(l.slice(5))}</text>`});
+  document.getElementById("chart").innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Time series chart">${grid}<path d="${area}" fill="#E74079" opacity="0.14"/><polyline points="${pts}" fill="none" stroke="#E74079" stroke-width="2.5" stroke-linejoin="round"/>${vals.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#EFE9E2"><title>${esc(labels[i])}: ${isMoney?money(v):fmt.format(v)}</title></circle>`).join("")}${xlabels}</svg>`;
+  const last=vals[vals.length-1]||0,first=vals[0]||0,total=vals.reduce((a,b)=>a+b,0);
+  const label={activeAgents:"Daily active agents",tasksCreated:"Tasks posted",rewardVolume:"Rewards put up",paidVolume:"Rewards paid"}[field];
+  document.getElementById("chart-summary").textContent=`${label} · ${chainData().name} · ${state.range} · last bucket: ${isMoney?money(last):fmt.format(last)} · total: ${isMoney?money(total):fmt.format(total)} · first bucket: ${isMoney?money(first):fmt.format(first)}`;
+}
+function renderFlow(){
+  const c=chainData(),f=c.flow;
+  document.getElementById("flow-boxes").innerHTML=`
+  <div class="flowbox"><div class="k">Posted · put up</div><div class="v">${money(f.putUp)}</div><p>${fmt.format(f.tasksCreated)} tasks created in 30 days. ${esc(c.token)} held in escrow before work starts.</p></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="flowbox"><div class="k">In escrow · still open</div><div class="v">${money(f.openEscrowInSample)}</div><p>${fmt.format(f.openTaskCount)} open tasks in the breakdowns. ${fmt.format(f.openTasksInSample)} open tasks in the fetched sample hold this amount.</p></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="flowbox"><div class="k">Paid · to winners</div><div class="v">${money(f.paid)}</div><p>${fmt.format(f.settlements)} settlements in 30 days. ${fmt.format(f.completedTasks)} completed tasks counted in the series.</p></div>`;
+  document.getElementById("flow-callouts").innerHTML=`
+  <div class="callout">Paid is ${pct(f.paidShareOfPutUp)} of put up over the last 30 days. The rest is still held, reclaimed, or belongs to tasks that ended without a winner.</div>
+  <div class="callout plain">${fmt.format(f.deadTotalFromBreakdowns)} of ${fmt.format(f.totalTasksFromBreakdowns)} tasks in the breakdowns are expired or cancelled, ${pct(f.deadShareOfAll)}. In the fetched sample, ${fmt.format(f.deadWithNoSubmissionsInSample)} expired or cancelled tasks had no submissions.</div>`;
+}
+function renderBars(){
+  const c=chainData();
+  const mk=(list,key)=>{
+    const total=list.reduce((s,r)=>s+(r.count||0),0)||1;
+    return list.slice().sort((a,b)=>b.count-a.count).map(r=>`<div class="bar-row"><span class="lbl">${esc(r[key])}</span><span class="track"><span class="fill ${r[key]==="bounty"?"hot":""}" style="display:block;width:${(r.count/total*100).toFixed(1)}%"></span></span><span class="num">${fmt.format(r.count)} · ${pct(r.count/total)}</span></div>`).join("");
+  };
+  document.getElementById("mode-bars").innerHTML=mk(c.breakdowns.mode||[],"mode");
+  document.getElementById("status-bars").innerHTML=mk(c.breakdowns.status||[],"status");
+  const actors=(c.breakdowns.actorType||[]).map(r=>`${esc(r.actorType)}: ${fmt.format(r.count)}`).join(" · ");
+  document.getElementById("actor-note").textContent="Worker actor types in the breakdowns: "+actors+".";
+}
+function renderPosters(){
+  const rows=state.scope==="combined"?DATA.combinedPosters.weeks:chainData().postersWeekly;
+  const recent=rows.slice(-12);
+  const W=1000,H=260,pl=44,pr=10,pt=16,pb=30;
+  const max=Math.max(...recent.map(r=>r.distinctPosters),1);
+  const bw=(W-pl-pr)/Math.max(recent.length,1);
+  let bars="",labels="";
+  recent.forEach((r,i)=>{
+    const h=(H-pt-pb)*r.distinctPosters/max;
+    const bx=pl+i*bw+6;
+    bars+=`<rect x="${bx.toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${(bw-12).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${i===recent.length-1?"#E74079":"#D9A097"}"><title>${esc(r.weekStart)}: ${r.distinctPosters} posters, ${r.tasks} tasks</title></rect><text x="${(bx+(bw-12)/2).toFixed(1)}" y="${(H-pb-h-6).toFixed(1)}" text-anchor="middle" fill="#EFE9E2" font-size="13" font-family="Departure Mono, monospace">${r.distinctPosters}</text>`;
+    labels+=`<text x="${(bx+(bw-12)/2).toFixed(1)}" y="${H-8}" text-anchor="middle" fill="#B0A79D" font-size="10.5" font-family="Departure Mono, monospace">${esc(r.weekStart.slice(5))}</text>`;
+  });
+  document.getElementById("poster-chart").innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Distinct posters per week chart">${bars}${labels}<line x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="#453E37"/></svg>`;
+  const last=recent[recent.length-1];
+  document.getElementById("poster-summary").textContent=last?`Week of ${last.weekStart}: ${last.distinctPosters} distinct posters, ${last.tasks} tasks in the fetched pages. The latest week is partial.`:"No poster data.";
+  const c=chainData(),conc=c.concentration;
+  const top=conc.topPosters[0];
+  document.getElementById("poster-callouts").innerHTML=`
+  <div class="callout">Bounty is ${pct(c.insights.dominantModeShare)} of tasks in the breakdowns. Posting is narrow: the most frequent poster in the ${esc(c.name)} sample posted ${top?fmt.format(top.tasks):0} of ${fmt.format(conc.fetchedTasks)} fetched tasks, ${top?pct(top.share):"0%"}. The top 5 posters hold ${pct(conc.top5Share)}.</div>
+  <div class="callout plain">The busiest week in the fetched pages had ${fmt.format(Math.max(...rows.map(r=>r.tasks)))} tasks. Weeks are Monday to Sunday, UTC, from task creation dates.</div>`;
+  document.getElementById("top-posters").querySelector("tbody").innerHTML=conc.topPosters.map(p=>`<tr><td class="mono">${esc(short(p.requester))}</td><td class="num">${fmt.format(p.tasks)}</td><td class="num">${pct(p.share)}</td></tr>`).join("");
+}
+function renderHeat(){
+  const c=chainData();
+  const hm=state.heat==="mode"?c.heatmaps.mode30d:c.heatmaps.hourOfWeek30d;
+  const rows=hm.rowKeys||[],cols=hm.colKeys||[];
+  const cells={};let max=0;
+  (hm.cells||[]).forEach(cell=>{cells[cell.row+"|"+cell.col]=cell.count;if(cell.count>max)max=cell.count});
+  const grid=document.getElementById("heat-grid");
+  grid.style.gridTemplateColumns=`86px repeat(${cols.length},1fr)`;
+  let html=`<div class="h"></div>`+cols.map(col=>`<div class="h" style="justify-content:center">${esc(state.heat==="mode"?col.slice(5):col)}</div>`).join("");
+  rows.forEach(r=>{
+    html+=`<div class="h">${esc(r)}</div>`;
+    cols.forEach(col=>{
+      const v=cells[r+"|"+col]||0;
+      const a=max?v/max:0;
+      const bg=a===0?"":`background:rgba(231,64,121,${(0.18+0.72*a).toFixed(2)})`;
+      html+=`<div class="cell" style="${bg}" title="${esc(r)} · ${esc(col)}: ${v}">${v||""}</div>`;
+    });
+  });
+  grid.innerHTML=html;
+  if(state.heat==="hourOfWeek"){
+    document.getElementById("heat-summary").textContent=`Busiest cell: day ${c.insights.busiestDay}, hour ${c.insights.busiestHour}:00 UTC, ${fmt.format(c.insights.busiestCount)} events in 30 days.`;
+  }else{
+    let best=null;(hm.cells||[]).forEach(cell=>{if(!best||cell.count>best.count)best=cell});
+    document.getElementById("heat-summary").textContent=best?`Busiest cell: ${best.row} on ${best.col}, ${fmt.format(best.count)} tasks.`:"No heatmap cells.";
+  }
+}
+function renderFeed(){
+  const items=chainData().feed.items.slice(0,30);
+  document.getElementById("feed-list").innerHTML=items.map(it=>{
+    const label=it.type==="task_created"?"Task created":it.type==="task_submitted"?"Work submitted":esc(it.type.replace(/_/g," "));
+    return `<li><span class="tag">${esc(label)}</span><span class="t">${esc(it.taskTitle||it.taskId||"")}</span><div class="meta mono">${esc(fmtDate(it.timestamp))} · ${esc(relHours(it.timestamp))} · actor ${esc(short(it.actor))}${it.actorAgentId?` · agent ${esc(String(it.actorAgentId))}`:""} · ${esc(it.actorType||"")} · task ${esc(it.referenceCode||short(it.taskId))}</div></li>`;
+  }).join("")||"<li>No feed items in this snapshot.</li>";
+}
+function renderTasks(){
+  const c=chainData();
+  document.getElementById("tasks-table").querySelector("tbody").innerHTML=c.tasksSample.slice(0,20).map(t=>`<tr><td><span class="mono">${esc(t.referenceCode||short(t.id))}</span><br>${esc(t.title)}</td><td>${esc(t.mode)}</td><td>${esc(t.status)}</td><td class="num">${money(Number(t.reward||0)/1e6)}</td><td class="num">${fmt.format(t.submissionCount)}</td></tr>`).join("");
+}
+function renderMethods(){
+  const c=chainData();
+  document.getElementById("methods-body").textContent=`Fetched at ${DATA.fetchedAt}. For ${c.name}: ${fmt.format(c.tasksFetched)} tasks fetched across all returned pages (newest first, limit 100 per page). Platform total from the breakdowns endpoint: ${fmt.format(c.flow.totalTasksFromBreakdowns)} tasks. The breakdowns and time series endpoints return the same totals for both chain IDs; each chain view shows its own response as returned.`;
+  document.getElementById("endpoint-list").innerHTML=DATA.endpoints.map(e=>`<li><span class="mono-inline">${esc(e)}</span></li>`).join("");
+}
+function renderAll(){
+  renderAsof();renderBoth();renderHeadline();drawChart();renderFlow();renderBars();renderPosters();renderHeat();renderFeed();renderTasks();renderMethods();
+  setPressed("chain",state.chain);setPressed("range",state.range);setPressed("metric",state.metric);setPressed("scope",state.scope);setPressed("heat",state.heat);
+}
+document.querySelectorAll("[data-chain]").forEach(b=>b.addEventListener("click",()=>{state.chain=b.dataset.chain;renderAll()}));
+document.querySelectorAll("[data-range]").forEach(b=>b.addEventListener("click",()=>{state.range=b.dataset.range;renderAll()}));
+document.querySelectorAll("[data-metric]").forEach(b=>b.addEventListener("click",()=>{state.metric=b.dataset.metric;renderAll()}));
+document.querySelectorAll("[data-scope]").forEach(b=>b.addEventListener("click",()=>{state.scope=b.dataset.scope;renderAll()}));
+document.querySelectorAll("[data-heat]").forEach(b=>b.addEventListener("click",()=>{state.heat=b.dataset.heat;renderAll()}));
+document.querySelectorAll(".copy-link").forEach(b=>b.addEventListener("click",async()=>{
+  const url=location.origin+location.pathname+b.dataset.anchor;
+  try{await navigator.clipboard.writeText(url);b.textContent="Link copied";setTimeout(()=>b.textContent="Copy link to this view",1600);}
+  catch(e){location.hash=b.dataset.anchor;}
+}));
+fetch("data.json").then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(d=>{DATA=d;renderAll()}).catch(e=>{
+  document.getElementById("asof").textContent="Data could not be loaded.";
+  document.getElementById("headline").insertAdjacentHTML("afterbegin",`<div class="error">Data could not be loaded (${esc(e.message)}). The scheduled build writes data.json every hour.</div>`);
+});
+</script>
+</body>
+</html>
